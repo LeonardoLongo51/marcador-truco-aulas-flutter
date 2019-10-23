@@ -1,9 +1,10 @@
 # Marcador de Truco
 
-- Desenvolvido por:
+Desenvolvido por:
 
 - Leonardo Longo 0040481821022
 - Marcelo Menezes 0040481821025
+- Tatiane Cruz 0040481821044
 
 Aplicativo para marcar os pontos no jogo de truco criado para disciplina de Programação Mobile.
 
