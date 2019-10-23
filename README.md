@@ -2,7 +2,7 @@
 
 - Desenvolvido por:
 
-- Leonardo Rodrigo Longo 0040481821022
+- Leonardo Longo 0040481821022
 - Marcelo Menezes 0040481821025
 
 Aplicativo para marcar os pontos no jogo de truco criado para disciplina de Programação Mobile.
