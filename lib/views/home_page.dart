@@ -14,13 +14,73 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _resetPlayers();
-    
+  }
+
+  TextEditingController _name = TextEditingController();
+
+  void resetFields() {
+    _name.text = '';
+  }
+
+  Widget _editPlayerName(Player player) {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                  title: Text("Alterar nome"),
+                  content: TextField(
+                      controller: _name,
+                      decoration: InputDecoration(hintText: "Novo nome")),
+                  actions: <Widget>[
+                    FlatButton(
+                      child: Text("Cancelar"),
+                      textColor: Colors.teal,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    FlatButton(
+                        child: Text("Ok"),
+                        textColor: Colors.teal,
+                        onPressed: () {
+                          setState(() {
+                            player.name = _name.text;
+                            Navigator.of(context).pop();
+                            _playerOne.name == '' && _name.text == ''
+                                ? player.name = "Nós"
+                                : _name.text;
+                            _playerTwo.name == '' && _name.text == ''
+                                ? player.name = "Eles"
+                                : _name.text;
+                            resetFields();
+                          });
+                        })
+                  ]);
+            });
+      },
+      child: Container(child: _showPlayerName(player.name)),
+    );
+  }
+
+  void _resetGame({Player player, bool resetVictories = true}) {
+    setState(() {
+      player.score = 0;
+      if (resetVictories) player.victories = 0;
+    });
+  }
+
+  void _resetAll({bool resetVictories = true}) {
+    _resetGame(player: _playerOne, resetVictories: resetVictories);
+    _resetGame(player: _playerTwo, resetVictories: resetVictories);
+    _playerOne = Player(name: "Nós", score: 0, victories: 0);
+    _playerTwo = Player(name: "Eles", score: 0, victories: 0);
   }
 
   void _resetPlayer({Player player, bool resetVictories = true}) {
     setState(() {
       player.score = 0;
-      if (resetVictories) player.victories = 0;
     });
   }
 
@@ -33,17 +93,19 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.deepOrange,
+        backgroundColor: Colors.teal,
         title: Text("Marcador Pontos (Truco!)"),
         actions: <Widget>[
           IconButton(
             onPressed: () {
-              _showDialog(
+              _showDialogReset(
                   title: 'Zerar',
-                  message:
-                      'Tem certeza que deseja começar novamente a pontuação?',
+                  message:'Realmente deseja zerar?',
                   confirm: () {
                     _resetPlayers();
+                  },
+                  allConfirm: () {
+                    _resetAll();
                   });
             },
             icon: Icon(Icons.refresh),
@@ -61,7 +123,8 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          _showPlayerName(player.name),
+          // _showPlayerName(player.name),
+          _editPlayerName(player),
           _showPlayerScore(player.score),
           _showPlayerVictories(player.victories),
           _showScoreButtons(player),
@@ -86,9 +149,7 @@ class _HomePageState extends State<HomePage> {
     return Text(
       name.toUpperCase(),
       style: TextStyle(
-          fontSize: 22.0,
-          fontWeight: FontWeight.w500,
-          color: Colors.deepOrange),
+          fontSize: 22.0, fontWeight: FontWeight.w500, color: Colors.teal),
     );
   }
 
@@ -135,20 +196,28 @@ class _HomePageState extends State<HomePage> {
       children: <Widget>[
         _buildRoundedButton(
           text: '-1',
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.teal.withOpacity(0.1),
           onTap: () {
-            setState(() {
-              player.score--;
-            });
+            if (player.score > 0)
+              setState(() {
+                player.score--;
+              });
           },
         ),
         _buildRoundedButton(
           text: '+1',
-          color: Colors.deepOrangeAccent,
+          color: Colors.teal,
           onTap: () {
-            setState(() {
-              player.score++;
-            });
+            if (player.score < 12)
+              setState(() {
+                player.score++;
+              });
+
+            if (_playerOne.score == 11 && _playerTwo.score == 11)
+              _showDialogFerro(
+                title: 'MÃO DE FERRO',
+                message: 'Boa sorte',
+              );
 
             if (player.score == 12) {
               _showDialog(
@@ -173,9 +242,37 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showDialog(
-      {String title, String message, Function confirm, Function cancel}) {
+  void _showDialogFerro({String title, String message, Function confirm}) {
     showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("OK"),
+              textColor: Colors.teal,
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (confirm != null) confirm();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDialog(
+      {String title,
+      String message,
+      Function confirm,
+      Function cancel,
+      Function allConfirm}) {
+    showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -184,6 +281,7 @@ class _HomePageState extends State<HomePage> {
           actions: <Widget>[
             FlatButton(
               child: Text("CANCEL"),
+              textColor: Colors.teal,
               onPressed: () {
                 Navigator.of(context).pop();
                 if (cancel != null) cancel();
@@ -191,11 +289,56 @@ class _HomePageState extends State<HomePage> {
             ),
             FlatButton(
               child: Text("OK"),
+              textColor: Colors.teal,
               onPressed: () {
                 Navigator.of(context).pop();
                 if (confirm != null) confirm();
               },
             ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDialogReset(
+      {String title,
+      String message,
+      Function confirm,
+      Function cancel,
+      Function allConfirm}) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Cancelar"),
+              textColor:  Colors.teal,
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (cancel != null) cancel();
+              },
+            ),
+            FlatButton(
+              child: Text("Jogo"),
+              textColor: Colors.teal,
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (confirm != null) confirm();
+              },
+            ),
+            FlatButton(
+              child: Text("Partidas"),
+              textColor: Colors.teal,
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (allConfirm != null) allConfirm();
+              },
+            )
           ],
         );
       },
